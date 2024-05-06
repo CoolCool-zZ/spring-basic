@@ -3,7 +3,7 @@ package hello.springbasic.member;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class MemoryMemberRepository implements MemberRepository{
+public class MemoryMemberRepository implements MemberRepository {
     private static Map<Long, Member> store = new ConcurrentHashMap<>();
 
     @Override
