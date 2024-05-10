@@ -1,4 +1,4 @@
-package hello.springbasic.beanfind;
+package hello.springbasic.bean;
 
 import hello.springbasic.AppConfig;
 import org.junit.jupiter.api.DisplayName;
