@@ -24,8 +24,24 @@ public class ApplicationContextFindBeanTest {
     ApplicationContext acWithSameBean =
             new AnnotationConfigApplicationContext(SameBeanConfig.class);
 
+    ApplicationContext acWithParentHasManyChild =
+            new AnnotationConfigApplicationContext(ParentHasManyChildBeanConfig.class);
+
     @Configuration
     static class SameBeanConfig {
+        @Bean
+        public DiscountPolicy rateDiscountPolicy1() {
+            return new RateDiscountPolicy();
+        }
+
+        @Bean
+        public DiscountPolicy rateDiscountPolicy2() {
+            return new RateDiscountPolicy();
+        }
+    }
+
+    @Configuration
+    static class ParentHasManyChildBeanConfig {
         @Bean
         public DiscountPolicy fixDiscountPolicy() {
             return new FixDiscountPolicy();
@@ -78,8 +94,8 @@ public class ApplicationContextFindBeanTest {
     @DisplayName("같은 타입의 빈이 2개 이상인 경우, 이름과 타입으로 조회 시 성공")
     public void findBeanByTypeDuplicateSuccess() {
         DiscountPolicy discountPolicy =
-                acWithSameBean.getBean("fixDiscountPolicy", DiscountPolicy.class);
-        assertThat(discountPolicy).isInstanceOf(FixDiscountPolicy.class);
+                acWithSameBean.getBean("rateDiscountPolicy1", DiscountPolicy.class);
+        assertThat(discountPolicy).isInstanceOf(RateDiscountPolicy.class);
     }
 
     @Test
@@ -87,6 +103,43 @@ public class ApplicationContextFindBeanTest {
     public void findAllDuplicatedTypeBean() {
         Map<String, DiscountPolicy> discountPolicyBeans =
                 acWithSameBean.getBeansOfType(DiscountPolicy.class);
+
+        System.out.println("discountPolicyBeans : " + discountPolicyBeans);
+
+        for (String key : discountPolicyBeans.keySet()) {
+            System.out.println("key=" + key + " value=" + discountPolicyBeans.get(key));
+        }
+        assertThat(discountPolicyBeans.size()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("부모 타입에 자식이 2개 이상인 경우, 부모 타입으로만 조회 시 중복 오류 발생")
+    public void findBeanByParentTypeFail() {
+        assertThrows(
+                NoUniqueBeanDefinitionException.class,
+                () -> acWithParentHasManyChild.getBean(DiscountPolicy.class));
+    }
+
+    @Test
+    @DisplayName("부모 타입에 자식이 2개 이상인 경우, 부모 타입과 이름으로 조회 시 성공")
+    public void findBeanByParentTypeAndName() {
+        DiscountPolicy discountPolicy =
+                acWithParentHasManyChild.getBean("fixDiscountPolicy", DiscountPolicy.class);
+        assertThat(discountPolicy).isInstanceOf(FixDiscountPolicy.class);
+    }
+
+    @Test
+    @DisplayName("부모 타입에 자식이 2개 이상인 경우, 특정 자식 타입으로 조회 시 성공")
+    public void findBeanByChildType() {
+        DiscountPolicy discountPolicy = acWithParentHasManyChild.getBean(FixDiscountPolicy.class);
+        assertThat(discountPolicy).isInstanceOf(FixDiscountPolicy.class);
+    }
+
+    @Test
+    @DisplayName("부모 타입에 자식이 2개 이상인 경우, 부모 타입의 모든 빈 조회 시 성공")
+    public void findBeanByParentTypeSuccess() {
+        Map<String, DiscountPolicy> discountPolicyBeans =
+                acWithParentHasManyChild.getBeansOfType(DiscountPolicy.class);
 
         System.out.println("discountPolicyBeans : " + discountPolicyBeans);
 
